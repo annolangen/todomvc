@@ -1,7 +1,17 @@
 {
   "private": true,
+  "scripts": {
+    "run": "parcel index.html",
+    "build": "parcel build index.html"
+  },
   "dependencies": {
+    "lit-html": "^1.1.0",
     "todomvc-app-css": "^2.0.0",
     "todomvc-common": "^1.0.0"
+  },
+  "devDependencies": {
+    "gts": "^1.0.0",
+    "parcel": "^1.12.3",
+    "typescript": "^3.5.2"
   }
 }
