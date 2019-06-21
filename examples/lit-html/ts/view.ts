@@ -1,6 +1,100 @@
-import { html, render } from '../node_modules/lit-html/lit-html';
+import {
+  directive,
+  html,
+  NodePart,
+  render,
+} from '../node_modules/lit-html/lit-html';
+import { Controller } from './controller';
+import { Item } from './item';
+import { Model, Summary } from './model';
 
-export function renderBody() {
+const HASH_BY_TEXT = {
+  All: '#/',
+  Active: '#/active',
+  Completed: '#/completed',
+};
+
+/**
+ * Ensures that the given callback is called with the # anchor of the current
+ * URL, initially and when the # anchor changes.
+ */
+export function bindHashHandler(handler: (hash: string) => void) {
+  window.addEventListener('load', () => handler(window.location.hash));
+  window.addEventListener('hashchange', () => handler(window.location.hash));
+}
+
+/**
+ * Renders the given model as the HTML body, delegating all control back to
+ * the given controller.
+ */
+export function renderBody(model: Model, controller: Controller) {
+  const summary: Summary = controller.count();
+  function addItem({ target }: { target: HTMLInputElement }) {
+    const title = target.value.trim();
+    if (title) {
+      target.value = '';
+      controller.addTodo(title);
+    }
+  }
+  const itemHtml = ({ id, completed, title }: Item) =>
+    html`
+<li class=${
+      model.editing && model.editing === id
+        ? 'editing'
+        : completed
+        ? 'completed'
+        : ''
+    }>
+	<div class="view">
+    <input class="toggle" 
+      type="checkbox" 
+      .checked=${completed} 
+      @change=${() => controller.updateTodo({ id, completed: !completed })}>
+    <label @dblclick=${() =>
+      renderBody({ ...model, editing: id }, controller)}>${title}</label>
+    <button class="destroy" 
+      @click=${() => controller.deleteTodo(id)}>
+    </button>
+  </div>
+  <input class="edit" 
+    value=${title}
+    @keyup=${({ code }: KeyboardEvent) => {
+      if (code === 'Escape') {
+        delete model.editing;
+        renderBody(model, controller);
+      }
+    }}
+    @keypress=${({ target, code }: KeyboardEvent) => {
+      if (code === 'Enter') {
+        (target as HTMLInputElement).blur();
+      }
+    }}
+    @blur=${({ target }: { target: HTMLInputElement }) => {
+      if (model.editing === id) {
+        const title = target.value.trim();
+        if (title) {
+          controller.updateTodo({ id, title });
+        } else {
+          controller.deleteTodo(id);
+        }
+      }
+    }}>${directive(() => (part: NodePart) => {
+      // TODO: Figure out a less esoteric way than directive to accomplish this.
+      if (model.editing === id) {
+        const input = part.startNode as HTMLInputElement;
+        input.focus();
+        input.setSelectionRange(title.length, title.length);
+      }
+    })()}</input>
+    </li>`;
+  const currentHash = window.location.hash;
+  function filterHtml(text: string) {
+    const hash = HASH_BY_TEXT[text];
+    const selected = currentHash ? currentHash === hash : text === 'All';
+    return html`
+      <li><a class=${selected ? 'selected' : ''} href=${hash}>${text}</a></li>
+    `;
+  }
   render(
     html`
       <section class="todoapp">
@@ -10,60 +104,42 @@ export function renderBody() {
             class="new-todo"
             placeholder="What needs to be done?"
             autofocus
+            @change=${addItem}
           />
         </header>
-        <!-- This section should be hidden by default and shown when there are todos -->
-        <section class="main">
-          <input id="toggle-all" class="toggle-all" type="checkbox" />
+        <section class="main" style=${summary.total ? '' : 'display:none'}>
+          <input
+            id="toggle-all"
+            class="toggle-all"
+            type="checkbox"
+            .checked=${!summary.active}
+            @change=${() => controller.setCompletedAllTodos(!!summary.active)}
+          />
           <label for="toggle-all">Mark all as complete</label>
           <ul class="todo-list">
-            <!-- These are here just to show the structure of the list items -->
-            <!-- List items should get the class "editing" when editing and "completed" when marked as completed -->
-            <li class="completed">
-              <div class="view">
-                <input class="toggle" type="checkbox" checked />
-                <label>Taste JavaScript</label>
-                <button class="destroy"></button>
-              </div>
-              <input class="edit" value="Create a TodoMVC template" />
-            </li>
-            <li>
-              <div class="view">
-                <input class="toggle" type="checkbox" />
-                <label>Buy a unicorn</label>
-                <button class="destroy"></button>
-              </div>
-              <input class="edit" value="Rule the web" />
-            </li>
+            ${model.todoList.map(itemHtml)}
           </ul>
         </section>
-        <!-- This footer should hidden by default and shown when there are todos -->
-        <footer class="footer">
-          <!-- This should be "0 items left" by default -->
-          <span class="todo-count"><strong>0</strong> item left</span>
-          <!-- Remove this if you don't implement routing -->
+        <footer class="footer" style=${summary.total ? '' : 'display:none'}>
+          <span class="todo-count">
+            <strong>${summary.active}</strong>
+            item${summary.active === 1 ? '' : 's'} left
+          </span>
           <ul class="filters">
-            <li>
-              <a class="selected" href="#/">All</a>
-            </li>
-            <li>
-              <a href="#/active">Active</a>
-            </li>
-            <li>
-              <a href="#/completed">Completed</a>
-            </li>
+            ${['All', 'Active', 'Completed'].map(filterHtml)}
           </ul>
-          <!-- Hidden if no completed items are left ↓ -->
-          <button class="clear-completed">Clear completed</button>
+          <button
+            class="clear-completed"
+            style=${summary.completed ? '' : 'display:none'}
+            @click=${() => controller.deleteCompleted()}
+          >
+            Clear completed
+          </button>
         </footer>
       </section>
       <footer class="info">
         <p>Double-click to edit a todo</p>
-        <!-- Remove the below line ↓ -->
-        <p>Template by <a href="http://sindresorhus.com">Sindre Sorhus</a></p>
-        <!-- Change this out with your name and url ↓ -->
-        <p>Created by <a href="http://todomvc.com">you</a></p>
-        <p>Part of <a href="http://todomvc.com">TodoMVC</a></p>
+        <p>Created by Anno Langen</p>
       </footer>
     `,
     document.body
