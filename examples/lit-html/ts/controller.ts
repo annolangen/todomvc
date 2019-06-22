@@ -22,7 +22,7 @@ export function newController(store: Store): Controller {
   let query: ItemQuery = ALL_ITEMS;
   let nextId =
     1 + store.find(ALL_ITEMS).reduce((max, todo) => Math.max(max, todo.id), 0);
-  const controller : Controller = {
+  const controller: Controller = {
     modelForHash(hash) {
       query = QUERY_BY_HASH[hash] || ALL_ITEMS;
       return { todoList: store.find(query) };

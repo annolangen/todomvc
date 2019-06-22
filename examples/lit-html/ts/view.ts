@@ -29,6 +29,8 @@ export function bindHashHandler(handler: (hash: string) => void) {
  */
 export function renderBody(model: Model, controller: Controller) {
   const summary: Summary = controller.count();
+  const currentHash = window.location.hash;
+
   function addItem({ target }: { target: HTMLInputElement }) {
     const title = target.value.trim();
     if (title) {
@@ -36,40 +38,28 @@ export function renderBody(model: Model, controller: Controller) {
       controller.addTodo(title);
     }
   }
-  const itemHtml = ({ id, completed, title }: Item) =>
-    html`
-<li class=${
+  function itemHtml({ id, completed, title }: Item) {
+    const liClass =
       model.editing && model.editing === id
         ? 'editing'
         : completed
         ? 'completed'
-        : ''
-    }>
-	<div class="view">
-    <input class="toggle" 
-      type="checkbox" 
-      .checked=${completed} 
-      @change=${() => controller.updateTodo({ id, completed: !completed })}>
-    <label @dblclick=${() =>
-      renderBody({ ...model, editing: id }, controller)}>${title}</label>
-    <button class="destroy" 
-      @click=${() => controller.deleteTodo(id)}>
-    </button>
-  </div>
-  <input class="edit" 
-    value=${title}
-    @keyup=${({ code }: KeyboardEvent) => {
+        : '';
+    const toggleCompleted = () =>
+      controller.updateTodo({ id, completed: !completed });
+    const edit = () => renderBody({ ...model, editing: id }, controller);
+    function keyup({ code }: KeyboardEvent) {
       if (code === 'Escape') {
         delete model.editing;
         renderBody(model, controller);
       }
-    }}
-    @keypress=${({ target, code }: KeyboardEvent) => {
+    }
+    function keypress({ target, code }: KeyboardEvent) {
       if (code === 'Enter') {
         (target as HTMLInputElement).blur();
       }
-    }}
-    @blur=${({ target }: { target: HTMLInputElement }) => {
+    }
+    function blur({ target }: { target: HTMLInputElement }) {
       if (model.editing === id) {
         const title = target.value.trim();
         if (title) {
@@ -78,16 +68,31 @@ export function renderBody(model: Model, controller: Controller) {
           controller.deleteTodo(id);
         }
       }
-    }}>${directive(() => (part: NodePart) => {
-      // TODO: Figure out a less esoteric way than directive to accomplish this.
+    }
+    function focusInput(part: NodePart) {
       if (model.editing === id) {
         const input = part.startNode as HTMLInputElement;
         input.focus();
         input.setSelectionRange(title.length, title.length);
       }
-    })()}</input>
-    </li>`;
-  const currentHash = window.location.hash;
+    }
+
+    return html`
+<li class=${liClass}>
+  <div class="view">
+    <input class="toggle" type="checkbox" .checked=${completed} @change=${toggleCompleted}>
+    <label @dblclick=${edit}>${title}</label>
+    <button class="destroy" @click=${() => controller.deleteTodo(id)}></button>
+  </div>
+  <input class="edit" value=${title} @keyup=${keyup} @keypress=${keypress} @blur=${blur}> 
+    ${
+      //TODO: Figure out a less esoteric way than directive to accomplish this
+      directive(() => focusInput)()
+    }
+  </input>
+</li>`;
+  }
+
   function filterHtml(text: string) {
     const hash = HASH_BY_TEXT[text];
     const selected = currentHash ? currentHash === hash : text === 'All';
