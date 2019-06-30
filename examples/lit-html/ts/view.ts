@@ -47,7 +47,6 @@ export function renderBody(model: Model, controller: Controller) {
         : '';
     const toggleCompleted = () =>
       controller.updateTodo({ id, completed: !completed });
-    const edit = () => renderBody({ ...model, editing: id }, controller);
     function keyup({ code }: KeyboardEvent) {
       if (code === 'Escape') {
         delete model.editing;
@@ -81,12 +80,12 @@ export function renderBody(model: Model, controller: Controller) {
 <li class=${liClass}>
   <div class="view">
     <input class="toggle" type="checkbox" .checked=${completed} @change=${toggleCompleted}>
-    <label @dblclick=${edit}>${title}</label>
+    <label @dblclick=${() => renderBody({ ...model, editing: id }, controller)}>${title}</label>
     <button class="destroy" @click=${() => controller.deleteTodo(id)}></button>
   </div>
   <input class="edit" value=${title} @keyup=${keyup} @keypress=${keypress} @blur=${blur}> 
     ${
-      //TODO: Figure out a less esoteric way than directive to accomplish this
+      // TODO: Figure out a less esoteric way than directive to accomplish this
       directive(() => focusInput)()
     }
   </input>
