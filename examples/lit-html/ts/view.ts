@@ -70,7 +70,7 @@ export function renderBody(model: Model, controller: Controller) {
     }
     function focusInput(part: NodePart) {
       if (model.editing === id) {
-        const input = part.startNode as HTMLInputElement;
+        const input = part.startNode.previousSibling as HTMLInputElement;
         input.focus();
         input.setSelectionRange(title.length, title.length);
       }

@@ -2,7 +2,7 @@
   "private": true,
   "scripts": {
     "run": "parcel index.html",
-    "build": "parcel build index.html"
+    "build": "parcel build index.html --public-url ./"
   },
   "dependencies": {
     "lit-html": "^1.1.0",
