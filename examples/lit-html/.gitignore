@@ -1,4 +1,5 @@
 node_modules
 *.bak
 .cache
+.parcel-cache
 dist

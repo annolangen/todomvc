@@ -1,9 +1,5 @@
-import {
-  directive,
-  html,
-  NodePart,
-  render,
-} from '../node_modules/lit-html/lit-html';
+import {  html,  render} from '../node_modules/lit-html/lit-html';
+import {ref} from '../node_modules/lit-html/directives/ref';
 import { Controller } from './controller';
 import { Item } from './item';
 import { Model, Summary } from './model';
@@ -68,9 +64,8 @@ export function renderBody(model: Model, controller: Controller) {
         }
       }
     }
-    function focusInput(part: NodePart) {
-      if (model.editing === id) {
-        const input = part.startNode.previousSibling as HTMLInputElement;
+    function focusInput(input?: HTMLInputElement) {
+      if (input && model.editing === id) {
         input.focus();
         input.setSelectionRange(title.length, title.length);
       }
@@ -83,11 +78,7 @@ export function renderBody(model: Model, controller: Controller) {
     <label @dblclick=${() => renderBody({ ...model, editing: id }, controller)}>${title}</label>
     <button class="destroy" @click=${() => controller.deleteTodo(id)}></button>
   </div>
-  <input class="edit" value=${title} @keyup=${keyup} @keypress=${keypress} @blur=${blur}> 
-    ${
-      // TODO: Figure out a less esoteric way than directive to accomplish this
-      directive(() => focusInput)()
-    }
+  <input class="edit" value=${title} @keyup=${keyup} @keypress=${keypress} @blur=${blur} ${ref(focusInput)}> 
   </input>
 </li>`;
   }
