@@ -5,13 +5,13 @@
     "build": "parcel build index.html --public-url ./"
   },
   "dependencies": {
-    "lit-html": "^1.1.0",
+    "lit-html": "^1.4.1",
     "todomvc-app-css": "^2.0.0",
     "todomvc-common": "^1.0.0"
   },
   "devDependencies": {
-    "gts": "^1.0.0",
-    "parcel": "^1.12.3",
+    "gts": "^3.1.1",
+    "parcel": "^2.8.2",
     "typescript": "^3.5.2"
   }
 }
