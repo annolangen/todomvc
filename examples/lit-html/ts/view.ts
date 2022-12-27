@@ -1,5 +1,5 @@
-import {  html,  render} from '../node_modules/lit-html/lit-html';
-import {ref} from '../node_modules/lit-html/directives/ref';
+import { html, render } from '../node_modules/lit-html/lit-html';
+import { ref } from '../node_modules/lit-html/directives/ref';
 import { Controller } from './controller';
 import { Item } from './item';
 import { Model, Summary } from './model';
@@ -39,8 +39,8 @@ export function renderBody(model: Model, controller: Controller) {
       model.editing && model.editing === id
         ? 'editing'
         : completed
-        ? 'completed'
-        : '';
+          ? 'completed'
+          : '';
     const toggleCompleted = () =>
       controller.updateTodo({ id, completed: !completed });
     function keyup({ code }: KeyboardEvent) {
@@ -64,8 +64,9 @@ export function renderBody(model: Model, controller: Controller) {
         }
       }
     }
-    function focusInput(input?: HTMLInputElement) {
-      if (input && model.editing === id) {
+    function focusInput(e?: Element) {
+      if (e && model.editing === id) {
+        const input = e as HTMLInputElement;
         input.focus();
         input.setSelectionRange(title.length, title.length);
       }
